@@ -396,10 +396,13 @@ struct PlayerAttackSensorHook : public mallow::hook::Trampoline<PlayerAttackSens
                     break;
                 }
             }
-            if (al::isEqualSubString(typeid(al::getSensorHost(source)).name(),"Seed")) {
+            {
                 const al::Nerve* sourceNrv = al::getSensorHost(source)->getNerveKeeper()->getCurrentNerve();
                 isInHitBuffer |= sourceNrv == getNerveAt(0x1D03268);  // GrowPlantSeedNrvHold
                 isInHitBuffer |= sourceNrv == getNerveAt(0x1D00EC8);  // GrowFlowerSeedNrvHold
+            
+                // do not "disable" when trying to hit BlockQuestion with TenCoin
+                isInHitBuffer &= sourceNrv != getNerveAt(0x1CD6758);
             }
             if(!isInHitBuffer){
                 if(
