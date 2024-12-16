@@ -412,8 +412,6 @@ struct PlayerAttackSensorHook : public mallow::hook::Trampoline<PlayerAttackSens
                     al::sendMsgExplosion(source, target, nullptr) ||
                     rs::sendMsgHackAttack(source, target) ||
                     rs::sendMsgHammerBrosHammerEnemyAttack(source, target) ||
-                    //allow hammer attack for MarchingCubes
-                    (rs::tryGetCollidedWallSensor(thisPtr->mPlayerColliderHakoniwa) && rs::sendMsgHammerBrosHammerEnemyAttack(rs::tryGetCollidedWallSensor(thisPtr->mPlayerColliderHakoniwa), target)) ||
                     rs::sendMsgCapReflect(source, target) ||
                     rs::sendMsgCapAttack(source, target) ||
                     al::sendMsgKickStoneAttackReflect(source, target) ||
@@ -481,6 +479,11 @@ struct PadTriggerYHook : public mallow::hook::Trampoline<PadTriggerYHook>{
 struct PlayerMovementHook : public mallow::hook::Trampoline<PlayerMovementHook>{
     static void Callback(PlayerActorHakoniwa* thisPtr){
         Orig(thisPtr);
+        al::HitSensor* sensor = al::getHitSensor(thisPtr, "GalaxySpin");
+        if(sensor && sensor->mIsValid) {
+            if(rs::tryGetCollidedWallSensor(thisPtr->mPlayerColliderHakoniwa))
+                thisPtr->attackSensor(sensor, rs::tryGetCollidedWallSensor(thisPtr->mPlayerColliderHakoniwa));
+        }
     }
 };
 
