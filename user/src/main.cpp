@@ -46,9 +46,13 @@ using mallow::log::logLine;
 
 //Mod code
 
+void* getRuntimeOffset(uintptr_t offset)
+{
+    return (void*)((((u64)malloc) - 0x00724b94) + offset);
+}
 const al::Nerve* getNerveAt(uintptr_t offset)
 {
-    return (const al::Nerve*)((((u64)malloc) - 0x00724b94) + offset);
+    return (const al::Nerve*)getRuntimeOffset(offset);
 }
 
 bool isPadTriggerGalaxySpin(int port){
@@ -458,14 +462,27 @@ struct PlayerAttackSensorHook : public mallow::hook::Trampoline<PlayerAttackSens
                     while(*name != 0)
                         mallow::log::log("%d ", *name++);*/
                     hitBuffer[hitBufferCount++] = al::getSensorHost(source);
-                    al::LiveActor* playerModel = thisPtr->mPlayerModelHolder->findModelActor("Normal");
-                    if(playerModel){
-                        sead::Vector3 effectPos = al::getTrans(playerModel);
-                        effectPos.y += 50.0f;
-                        sead::Vector3 direction = (al::getTrans(al::getSensorHost(source)) - al::getTrans(playerModel));
-                        direction.normalize();
-                        effectPos += direction * 75.0f;
-                        al::tryEmitEffect(playerModel, "Hit", &effectPos);
+
+                    bool shouldEmitEffect = true;
+                    al::LiveActor* host = al::getSensorHost(source);
+                    if(host) {
+                        void* vtable = *((void**)host);
+                        shouldEmitEffect &= !(vtable == getRuntimeOffset(0x1CB5340));  // Coin
+                        shouldEmitEffect &= !(vtable == getRuntimeOffset(0x1CB6EB0));  // CoinChameleon
+                        shouldEmitEffect &= !(vtable == getRuntimeOffset(0x1C90970));  // Gunetter
+                        shouldEmitEffect &= !(vtable == getRuntimeOffset(0x1C90E30));  // GunetterBody
+                        shouldEmitEffect &= !(vtable == getRuntimeOffset(0x1C91210));  // GunetterSpin
+                    }
+                    if(shouldEmitEffect) {
+                        al::LiveActor* playerModel = thisPtr->mPlayerModelHolder->findModelActor("Normal");
+                        if(playerModel){
+                            sead::Vector3 effectPos = al::getTrans(playerModel);
+                            effectPos.y += 50.0f;
+                            sead::Vector3 direction = (al::getTrans(al::getSensorHost(source)) - al::getTrans(playerModel));
+                            direction.normalize();
+                            effectPos += direction * 75.0f;
+                            al::tryEmitEffect(playerModel, "Hit", &effectPos);
+                        }
                     }
                     return;
                 }
