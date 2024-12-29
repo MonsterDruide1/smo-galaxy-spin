@@ -5,6 +5,8 @@ set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_EXECUTABLE_SUFFIX ".elf")
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 add_compile_options(--target=aarch64-none-elf)
 add_compile_options(-mcpu=cortex-a57+fp+simd+crypto+crc)
 add_compile_options(-mno-implicit-float)
